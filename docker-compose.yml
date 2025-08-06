@@ -1,0 +1,66 @@
+services:
+  postgresql:
+    image: 'docker.io/bitnami/postgresql:16'
+    volumes:
+      - 'postgresql_data:/bitnami/postgresql'
+    environment:
+      - POSTGRESQL_DATABASE=discourse_db
+      - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
+  redis:
+    image: 'docker.io/bitnami/redis:8.0.2'
+    environment:
+      - REDIS_PASSWORD=${PASSWORD_YOUR_DISCOURSE_PASS}
+    volumes:
+      - 'redis_data:/bitnami/redis'
+  discourse:
+    image: 'docker.io/bitnami/discourse:3.4.4'
+    ports:
+      - '3145:3000'
+    volumes:
+      - 'discourse_data:/bitnami/discourse'
+    depends_on:
+      - postgresql
+      - redis
+    environment:
+      - DISCOURSE_HOST=${DISCOURSE_HOST}
+      - DISCOURSE_DATABASE_HOST=postgresql
+      - DISCOURSE_USERNAME=admin
+      - DISCOURSE_PASSWORD=${PASSWORD_YOUR_DISCOURSE_PASS}
+      - DISCOURSE_EMAIL=${DISCOURSE_EMAIL}
+      - DISCOURSE_SITENAME=${DISCOURSE_SITENAME}
+      - DISCOURSE_POSTGRESQL_NAME=discourse_db
+      - DISCOURSE_POSTGRESQL_USERNAME=postgres
+      - DISCOURSE_POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
+      - DISCOURSE_SMTP_HOST=${DISCOURSE_SMTP_HOST}
+      - DISCOURSE_SMTP_PORT=${DISCOURSE_SMTP_PORT}
+      - DISCOURSE_SMTP_USER=${DISCOURSE_SMTP_USER}
+      - DISCOURSE_SMTP_PASSWORD=${DISCOURSE_SMTP_PASSWORD}
+      - DISCOURSE_REDIS_HOST=redis
+      - DISCOURSE_REDIS_PORT_NUMBER=6379
+      - DISCOURSE_REDIS_PASSWORD=${PASSWORD_YOUR_DISCOURSE_PASS}
+      - POSTGRESQL_CLIENT_POSTGRES_USER=postgres
+      - POSTGRESQL_CLIENT_POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRESQL_CLIENT_CREATE_DATABASE_NAME=discourse_db
+      - 'POSTGRESQL_CLIENT_CREATE_DATABASE_EXTENSIONS=hstore,pg_trgm'
+      - BITNAMI_DEBUG=true
+  sidekiq:
+    image: 'docker.io/bitnami/discourse:3.4.4'
+    depends_on:
+      - discourse
+    volumes:
+      - 'sidekiq_data:/bitnami/discourse'
+    command: /opt/bitnami/scripts/discourse-sidekiq/run.sh
+    environment:
+      - DISCOURSE_HOST=${DISCOURSE_HOST}
+      - DISCOURSE_DATABASE_HOST=postgresql
+      - DISCOURSE_DATABASE_PORT_NUMBER=5432
+      - DISCOURSE_DATABASE_USER=postgres
+      - DISCOURSE_DATABASE_NAME=discourse_db
+      - DISCOURSE_DATABASE_PASSWORD=${POSTGRESQL_PASSWORD}
+      - DISCOURSE_REDIS_HOST=redis
+      - DISCOURSE_REDIS_PASSWORD=${PASSWORD_YOUR_DISCOURSE_PASS}
+      - DISCOURSE_REDIS_PORT_NUMBER=6379
+      - DISCOURSE_SMTP_HOST=${DISCOURSE_SMTP_HOST}
+      - DISCOURSE_SMTP_PORT=${DISCOURSE_SMTP_PORT}
+      - DISCOURSE_SMTP_USER=${DISCOURSE_SMTP_USER}
+      - DISCOURSE_SMTP_PASSWORD=${DISCOURSE_SMTP_PASSWORD}
